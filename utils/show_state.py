@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from qiskit import Aer, execute
+
+INCH_PER_ROW = 0.8
 
 def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=None, register_sizes=None, terms_per_row=8, binary=False, state_label=None, draw=True, return_fig=False, gpu=True):
     """Print the quantum state of the circuit in latex markdown.
@@ -33,21 +36,29 @@ def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=N
 
     statevector = execute(circuit, simulator).result().data()['statevector']
     
+    row_texts = show_statevector(statevector, amp_norm=amp_norm, phase_norm=phase_norm, global_phase=global_phase, register_sizes=register_sizes, terms_per_row=terms_per_row, binary=binary, state_label=state_label, draw=False)
+
+    num_rows = len(row_texts)
+    
     if draw:
-        circuit.draw('mpl', style={'dpi': '300'}, fold=70)
-    
-    fig = plt.figure(figsize=[10., 0.5])
-    ax = fig.add_subplot()
+        circuit_num_rows = circuit.num_qubits * 2
+        num_rows_total = num_rows + circuit_num_rows
+        fig = plt.figure(figsize=[10., INCH_PER_ROW * num_rows_total], dpi=(100 + 10 * num_rows))
+        gs = gridspec.GridSpec(ncols=1, nrows=num_rows_total, figure=fig)
+        ax = fig.add_subplot(gs[0:circuit_num_rows, 0])
+        circuit.draw('mpl', fold=70, ax=ax)
+        ax = fig.add_subplot(gs[circuit_num_rows:, 0])
+    else:
+        fig = plt.figure(figsize=[10., INCH_PER_ROW * num_rows])
+        ax = fig.add_subplot()
         
-    row_texts = show_statevector(statevector, amp_norm=amp_norm, phase_norm=phase_norm, global_phase=global_phase, register_sizes=register_sizes, terms_per_row=terms_per_row, binary=binary, state_label=state_label, ax=ax)
-    
-    fig.set_figheight(0.5 * len(row_texts))
+    _draw_row_texts(row_texts, ax=ax)
 
     if return_fig:
         return fig
 
     
-def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=None, register_sizes=None, terms_per_row=8, binary=False, state_label=None, ax=None):
+def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=None, register_sizes=None, terms_per_row=8, binary=False, state_label=None, draw=True, ax=None):
     """Print the quantum state of the circuit in latex markdown.
     
     Args:
@@ -63,6 +74,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         terms_per_row (int): Number of terms to show per row.
         binary (bool): Show ket indices in binary.
         state_label (None or str): If not None, prepend '|`state_label`> = ' to the printout
+        draw (bool): Print the state vector via matplotlib Axes.text().
         ax (None or mpl.Axes): Axes object. A new axes is created if None.
         
     Returns:
@@ -224,12 +236,10 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
     if len(str_rows[-1]) == 0:
         str_rows.pop()
         
-    num_rows = len(str_rows)
-
     if amp_norm is not None or phase_offset != 0.:
         str_rows[0].insert(0, r'\left(')
 
-        if num_rows != 1:
+        if len(str_rows) != 1:
             str_rows[0].append(r'\right.')
             str_rows[-1].insert(0, r'\left.')
 
@@ -256,15 +266,22 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         
     if state_label is not None:
         str_rows[0].insert(0, r'| {} \rangle = '.format(state_label))
-
-    if ax is None:
-        fig = plt.figure(figsize=[10., 0.5 * num_rows])
-        ax = fig.add_subplot()
         
     row_texts = list('${}$'.format(''.join(str_terms)) for str_terms in str_rows)
+
+    if draw:
+        _draw_row_texts(row_texts, ax=ax)
         
+    return row_texts
+
+
+def _draw_row_texts(row_texts, ax=None):
+    num_rows = len(row_texts)
+    
+    if ax is None:
+        fig = plt.figure(figsize=[10., INCH_PER_ROW * num_rows])
+        ax = fig.add_subplot()
+       
     ax.axis('off')
     for irow, row_text in enumerate(row_texts):
-        ax.text(0.5, 1. / num_rows * (num_rows - irow - 1), row_text, fontsize='x-large', ha='center')
-
-    return row_texts
+        ax.text(0.5, 1. / num_rows * (num_rows - irow - 1), row_text, ha='center')
