@@ -25,10 +25,3 @@ def make_vqe_circuit(n,nl,npar):
         
     return qc
 
-
-def callback(nfev, parameters, energy, stddev):
-    intermediate_info['nfev'].append(nfev)
-    intermediate_info['parameters'].append(parameters)
-    intermediate_info['energy'].append(energy)
-    intermediate_info['stddev'].append(stddev)
-
