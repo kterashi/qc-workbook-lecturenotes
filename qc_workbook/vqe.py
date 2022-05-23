@@ -22,6 +22,6 @@ def make_vqe_circuit(n,nl,npar):
         qc.rz(param_list[6*i+5], 2)
         #qc.cnot(0, 1)
         #qc.cnot(1, 2)
-
         
     return qc
+
