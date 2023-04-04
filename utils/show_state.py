@@ -7,7 +7,7 @@ INCH_PER_ROW = 0.8
 
 def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=None, register_sizes=None, terms_per_row=8, binary=False, state_label=None, draw=True, return_fig=False, gpu=True):
     """Print the quantum state of the circuit in latex markdown.
-    
+
     Args:
         circuit (QuantumCircuit): The circuit.
         amp_norm (None or tuple): If not None, specify the normalization of the amplitudes by
@@ -25,7 +25,7 @@ def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=N
         return_fig (bool): Returns the mpl Figure object.
         gpu (bool): Use statevector_gpu if available.
     """
-    
+
     # Run the circuit in statevector_simulator and obtain the final state statevector
     simulator = Aer.get_backend('statevector_simulator')
     if gpu:
@@ -35,11 +35,11 @@ def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=N
             simulator.set_options(method='statevector')
 
     statevector = execute(circuit, simulator).result().data()['statevector']
-    
+
     row_texts = show_statevector(statevector, amp_norm=amp_norm, phase_norm=phase_norm, global_phase=global_phase, register_sizes=register_sizes, terms_per_row=terms_per_row, binary=binary, state_label=state_label, draw=False)
 
     num_rows = len(row_texts)
-    
+
     if draw:
         circuit_num_rows = circuit.num_qubits * 2
         num_rows_total = num_rows + circuit_num_rows
@@ -51,16 +51,16 @@ def show_state(circuit, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=N
     else:
         fig = plt.figure(figsize=[10., INCH_PER_ROW * num_rows])
         ax = fig.add_subplot()
-        
+
     _draw_row_texts(row_texts, ax=ax)
 
     if return_fig:
         return fig
 
-    
+
 def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), global_phase=None, register_sizes=None, terms_per_row=8, binary=False, state_label=None, draw=True, ax=None):
     """Print the quantum state of the circuit in latex markdown.
-    
+
     Args:
         statevector (np.ndarray(*, dtype=np.complex128)): Statevector.
         amp_norm (None or tuple): If not None, specify the normalization of the amplitudes by
@@ -76,28 +76,28 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         state_label (None or str): If not None, prepend '|`state_label`> = ' to the printout
         draw (bool): Print the state vector via matplotlib Axes.text().
         ax (None or mpl.Axes): Axes object. A new axes is created if None.
-        
+
     Returns:
         List(str): Latex text (enclosed in $$) for each line.
     """
-    
+
     log2_shape = np.log2(statevector.shape[0])
     assert log2_shape == np.round(log2_shape), 'Invalid statevector'
     num_qubits = np.round(log2_shape).astype(int)
-    
+
     # Absolute value and the phase of the amplitudes
     absamp = np.abs(statevector)
     logamp = np.zeros_like(statevector)
     np.log(statevector, out=logamp, where=(absamp > 0.))
     phase = logamp.imag
-    
+
     # Set the numerical tolerance for various comparisons
     tolerance = 1.e-3
-        
+
     # List to be concatenated into the final latex string
     str_rows = [[]]
     str_terms = str_rows[0]
-    
+
     # Ket format template
     ket_template = ' |'
     if register_sizes is not None:
@@ -112,7 +112,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
             slots = ['{}']
 
     ket_template += ':'.join(slots) + r'\rangle'
-  
+
     # Preprocessing
     indices = np.asarray(absamp > tolerance).nonzero()[0]
     absamp = absamp[indices]
@@ -131,7 +131,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         absamp /= amp_norm[0]
         rounded_amp = np.round(absamp).astype(int)
         amp_is_int = np.asarray(np.abs(absamp - rounded_amp) < tolerance, dtype=bool)
-        
+
     nonzero_phase = np.asarray(np.abs(phase) > tolerance, dtype=bool)
     phase = np.where(phase > 0., phase, phase + 2. * np.pi)
     reduced_phase = phase / np.pi
@@ -145,7 +145,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         phase /= phase_norm[0]
         rounded_phase = np.round(phase).astype(int)
         phase_is_int = np.asarray(np.abs(phase - rounded_phase) < tolerance, dtype=bool)
-       
+
     if register_sizes is not None:
         register_sizes = np.array(register_sizes)
         cumul_register_sizes = np.roll(np.cumsum(register_sizes), 1)
@@ -153,7 +153,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
         register_indices = np.tile(np.expand_dims(indices, axis=1), (1, register_sizes.shape[0]))
         register_indices = np.right_shift(register_indices, cumul_register_sizes)
         register_indices = np.mod(register_indices, np.power(2, register_sizes))
-        
+
     # Sign of each term (initialized to 0 so the first term doesn't get a + in front)
     sign = 0
 
@@ -178,7 +178,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
             else:
                 # Otherwise float * norm
                 basis_unsigned += '{:.2f}'.format(a)
-                
+
         # Write the phase
         if nonzero_phase[iterm]:
             # First check if the phase is a multiple of pi or pi/2
@@ -194,7 +194,7 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
 
             else:
                 p = phase[iterm]
-                
+
                 basis_unsigned += 'e^{'
                 if phase_norm is None:
                     # No phase normalization -> write as exp(raw float * i)
@@ -222,20 +222,20 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
             term = ' - ' + basis_unsigned
         else:
             term = basis_unsigned
-            
+
         str_terms.append(term)
 
         if len(str_terms) == terms_per_row:
             str_rows.append([])
             str_terms = str_rows[-1]
-            
+
         # All terms except the very first are signed
         sign = 1
 
     # Remove empty row
     if len(str_rows[-1]) == 0:
         str_rows.pop()
-        
+
     if amp_norm is not None or phase_offset != 0.:
         str_rows[0].insert(0, r'\left(')
 
@@ -258,30 +258,30 @@ def show_statevector(statevector, amp_norm=None, phase_norm=(np.pi, '\pi'), glob
                 phase_value_expr = '{:.2f} \cdot {}'.format(phase_offset, phase_norm[1])
         else:
             phase_value_expr = '{:.2f}'.format(phase_offset)
-            
+
         str_rows[0].insert(0, 'e^{{{} i}}'.format(phase_value_expr))
 
     if amp_norm is not None:
         str_rows[0].insert(0, amp_norm[1])
-        
+
     if state_label is not None:
         str_rows[0].insert(0, r'| {} \rangle = '.format(state_label))
-        
+
     row_texts = list('${}$'.format(''.join(str_terms)) for str_terms in str_rows)
 
     if draw:
         _draw_row_texts(row_texts, ax=ax)
-        
+
     return row_texts
 
 
 def _draw_row_texts(row_texts, ax=None):
     num_rows = len(row_texts)
-    
+
     if ax is None:
         fig = plt.figure(figsize=[10., INCH_PER_ROW * num_rows])
         ax = fig.add_subplot()
-       
+
     ax.axis('off')
     for irow, row_text in enumerate(row_texts):
         ax.text(0.5, 1. / num_rows * (num_rows - irow - 1), row_text, ha='center')
