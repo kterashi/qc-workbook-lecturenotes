@@ -33,7 +33,12 @@ def operational_backend(
     """
 
     def backend_filter(backend):
-        if not backend.status().operational:
+        try:
+            status = backend.status()
+        except:
+            return False
+
+        if not status.operational:
             return False
 
         config = backend.configuration()
