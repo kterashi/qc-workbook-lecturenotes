@@ -1,13 +1,14 @@
-from typing import Tuple, List, Union, Optional
+from typing import Union, Optional
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from qiskit import Aer, transpile, QuantumCircuit
+from qiskit import transpile, QuantumCircuit
+from qiskit_aer import AerSimulator
 
 def show_state(
     statevector: Union[QuantumCircuit, np.ndarray],
-    amp_norm: Optional[Tuple[float, str]] = None,
-    phase_norm: Tuple[float, str] = (np.pi, '\pi'),
+    amp_norm: Optional[tuple[float, str]] = None,
+    phase_norm: tuple[float, str] = (np.pi, '\pi'),
     global_phase: Optional[Union[float, str]] = None,
     register_sizes: Optional['array_like'] = None,
     terms_per_row: int = 8,
@@ -55,8 +56,8 @@ def show_state(
 
 def statevector_expr(
     statevector: Union[np.ndarray, QuantumCircuit],
-    amp_norm: Optional[Tuple[float, str]] = None,
-    phase_norm: Tuple[float, str] = (np.pi, '\pi'),
+    amp_norm: Optional[tuple[float, str]] = None,
+    phase_norm: tuple[float, str] = (np.pi, '\pi'),
     global_phase: Optional[Union[float, str]] = None,
     register_sizes: Optional['array_like'] = None,
     terms_per_row: int = 0,
@@ -64,7 +65,7 @@ def statevector_expr(
     amp_format: str = '.3f',
     phase_format: str = '.2f',
     state_label: Union[str, None] = r'\text{final}'
-) -> Union[str, List[str]]:
+) -> Union[str, list[str]]:
     """Compose the LaTeX expressions for a statevector.
 
     Args:
@@ -86,7 +87,7 @@ def statevector_expr(
 
     if isinstance(statevector, QuantumCircuit):
         # Run the circuit in statevector_simulator and obtain the final state statevector
-        simulator = Aer.get_backend('statevector_simulator')
+        simulator = AerSimulator(method='statevector')
 
         circuit = transpile(statevector, backend=simulator)
         statevector = np.asarray(simulator.run(circuit).result().data()['statevector'])
@@ -169,7 +170,7 @@ def statevector_expr(
 
     ## Compile the LaTeX expressions
 
-    # List to be concatenated into the final latex string
+    # list to be concatenated into the final latex string
     lines = []
     str_terms = []
 
