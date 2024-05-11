@@ -19,10 +19,7 @@ def make_grover_circuit(n_qubits):
     ##################
     oracle.x(1)
     oracle.x(4)
-    #oracle.h(n_qubits-1)
-    #oracle.mcx(list(range(n_qubits-1)), n_qubits-1)
     oracle.mcp(np.pi, list(range(n_qubits-1)), n_qubits-1)
-    #oracle.h(n_qubits-1)
     oracle.x(1)
     oracle.x(4)
     ##################
@@ -43,9 +40,7 @@ def make_grover_circuit(n_qubits):
         qc.x(list(range(n)))
 
         # multi-controlled Zゲート
-        #qc.h(n-1)
         qc.mcp(np.pi, list(range(n-1)), n-1)
-        #qc.h(n-1)
 
         qc.x(list(range(n)))
         ##################
