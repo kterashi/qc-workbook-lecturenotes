@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from qiskit import transpile, QuantumCircuit
+#from qiskit.quantum_info import Operator
 from qiskit_aer import AerSimulator
 
 def show_state(
@@ -92,7 +93,6 @@ def statevector_expr(
 
         # Append an instruction to save the statevector of the final state of the circuit
         circuit.save_statevector()
-        circuit = transpile(circuit, backend=simulator)
         statevector = np.asarray(simulator.run(circuit).result().data()['statevector'])
 
     ## Setup
