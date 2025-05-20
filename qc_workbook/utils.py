@@ -3,7 +3,7 @@
 from typing import Callable, Optional
 import collections
 import numpy as np
-from qiskit.providers.backend import BackendV1 as Backend
+from qiskit.providers.backend import BackendV2 as Backend
 
 def operational_backend(
     min_qubits: int = 0,
